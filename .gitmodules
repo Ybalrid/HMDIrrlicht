@@ -1,0 +1,3 @@
+[submodule "lib/libovr"]
+	path = lib/libovr
+	url = git@github.com:if1live/LibOVR.git
