@@ -1,3 +1,6 @@
 [submodule "lib/libovr"]
 	path = lib/libovr
 	url = git@github.com:if1live/LibOVR.git
+[submodule "lib/irrlicht"]
+	path = lib/irrlicht
+	url = git@github.com:omniavinco/irrlicht-cmake.git
