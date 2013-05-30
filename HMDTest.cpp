@@ -16,6 +16,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 */
 
 #include <irrlicht.h>
+#include <OVR.h>
 #include "HMDStereoRender.h"
 
 using namespace irr;
@@ -24,6 +25,8 @@ using namespace scene;
 using namespace video;
 using namespace io;
 using namespace gui;
+
+using namespace OVR;
 
 // Configuration
 
@@ -34,8 +37,7 @@ bool vsync = true;
 float mouseSpeed = 40.0f;
 float walkSpeed = 3.0f;
 
-class MyEventReceiver : public IEventReceiver
-{
+class MyEventReceiver : public IEventReceiver {
 public:
 	bool OnEvent(const SEvent& event)
 	{   
@@ -83,6 +85,17 @@ int main(int argc, char* argv[]){
 
 	HMDStereoRender renderer(device, HMD, 10);
 
+	//Oculus Rift Head Tracking
+	System::Init(Log::ConfigureDefaultLog(LogMask_All));
+	Ptr<DeviceManager> pManager = *DeviceManager::Create();
+	Ptr<HMDDevice> pHMD = *pManager->EnumerateDevices<HMDDevice>().CreateDevice();
+	Ptr<SensorDevice> pSensor = pHMD->GetSensor();
+
+	SensorFusion SFusion;
+	if(pSensor) {
+		SFusion.AttachToSensor(pSensor);
+	}
+
 	// Create world
 	smgr->addCameraSceneNodeFPS();
 
@@ -106,17 +119,36 @@ int main(int argc, char* argv[]){
 	IAnimatedMeshSceneNode* dwarfNode = smgr->addAnimatedMeshSceneNode(dwarf);
 	dwarfNode->setPosition(vector3df(40,-25,20));
 
-	device->getCursorControl()->setVisible(false);
+	//device->getCursorControl()->setVisible(false);
 
 	// Render loop
-	while(device->run()){
+	float lastSensorYaw = 0.0f;
+	while(device->run()) {
+		Quatf hmdOrient = SFusion.GetOrientation();
+		float yaw = 0.0f;
+		float eyePitch = 0.0f;
+		float eyeRoll = 0.0f;
+		float eyeYaw = 0.0f;
+		hmdOrient.GetEulerAngles<Axis_Y, Axis_X, Axis_Z>(&yaw, &eyePitch, &eyeRoll);
+		eyeYaw += (yaw - lastSensorYaw);
+
+		printf("%f, %f, %f\n", eyePitch, eyeRoll, eyeYaw);
+
 		driver->beginScene(true,true,SColor(0,100,100,100));
 
-		renderer.drawAll(smgr);
+		//renderer.drawAll(smgr);
+		smgr->drawAll();
 
 		// end scene
 		driver->endScene();
+
+		// save value
+		lastSensorYaw = eyeYaw;
 	}
 	device->drop();
+
+	//Deinitialize Oculus LibOVR
+	System::Destroy();
+
 	return 0;
 }

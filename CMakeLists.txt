@@ -11,6 +11,7 @@ ENDIF(  )
 ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 
 INCLUDE_DIRECTORIES( lib/irrlicht/include )
+INCLUDE_DIRECTORIES( lib/libovr/Include )
 
 FILE( GLOB HMD_HEADERS *.h )
 FILE( GLOB HMD_SOURCES *.cpp )
@@ -23,6 +24,6 @@ ADD_EXECUTABLE(HMDIrrlicht
 	${HMD_HEADERS} 
 	${HMD_SOURCES} )
 	
-TARGET_LINK_LIBRARIES( HMDIrrlicht LibOVR irrlicht_shared )
+TARGET_LINK_LIBRARIES( HMDIrrlicht LibOVR irrlicht_shared Setupapi Winmm)
 ADD_DEPENDENCIES( HMDIrrlicht LibOVR irrlicht_shared )
 
