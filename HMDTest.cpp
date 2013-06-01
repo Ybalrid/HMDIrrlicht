@@ -16,8 +16,8 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 */
 
 #include <irrlicht.h>
-#include <OVR.h>
 #include "HMDStereoRender.h"
+#include "head_tracking.h"
 
 using namespace irr;
 using namespace core;
@@ -26,7 +26,6 @@ using namespace video;
 using namespace io;
 using namespace gui;
 
-using namespace OVR;
 
 // Configuration
 
@@ -55,7 +54,10 @@ public:
 };
 
 
-int main(int argc, char* argv[]){
+
+
+int main(int argc, char* argv[])
+{
 	// Check fullscreen
 	for (int i=1;i<argc;i++) fullscreen |= !strcmp("-f", argv[i]);
 
@@ -86,18 +88,13 @@ int main(int argc, char* argv[]){
 	HMDStereoRender renderer(device, HMD, 10);
 
 	//Oculus Rift Head Tracking
-	System::Init(Log::ConfigureDefaultLog(LogMask_All));
-	Ptr<DeviceManager> pManager = *DeviceManager::Create();
-	Ptr<HMDDevice> pHMD = *pManager->EnumerateDevices<HMDDevice>().CreateDevice();
-	Ptr<SensorDevice> pSensor = pHMD->GetSensor();
-
-	SensorFusion SFusion;
-	if(pSensor) {
-		SFusion.AttachToSensor(pSensor);
-	}
+	CHeadTracking dev;
+	dev.startUp();
 
 	// Create world
 	smgr->addCameraSceneNodeFPS();
+	//ICameraSceneNode *camera = smgr->getActiveCamera();
+	//ISceneNode *camera = smgr->addCameraSceneNode(0);
 
 	// load the quake map
 	device->getFileSystem()->addZipFileArchive("../../lib/irrlicht/media/map-20kdm2.pk3");
@@ -118,21 +115,13 @@ int main(int argc, char* argv[]){
 	IAnimatedMesh* dwarf = smgr->getMesh("../../lib/irrlicht/media/dwarf.x");
 	IAnimatedMeshSceneNode* dwarfNode = smgr->addAnimatedMeshSceneNode(dwarf);
 	dwarfNode->setPosition(vector3df(40,-25,20));
-
 	//device->getCursorControl()->setVisible(false);
 
 	// Render loop
-	float lastSensorYaw = 0.0f;
 	while(device->run()) {
-		Quatf hmdOrient = SFusion.GetOrientation();
-		float yaw = 0.0f;
-		float eyePitch = 0.0f;
-		float eyeRoll = 0.0f;
-		float eyeYaw = 0.0f;
-		hmdOrient.GetEulerAngles<Axis_Y, Axis_X, Axis_Z>(&yaw, &eyePitch, &eyeRoll);
-		eyeYaw += (yaw - lastSensorYaw);
-
-		printf("%f, %f, %f\n", eyePitch, eyeRoll, eyeYaw);
+		float yaw, pitch, roll;
+		dev.getValue(&yaw, &pitch, &roll);
+		printf("%f, %f, %f\n", yaw, pitch, roll);
 
 		driver->beginScene(true,true,SColor(0,100,100,100));
 
@@ -141,14 +130,11 @@ int main(int argc, char* argv[]){
 
 		// end scene
 		driver->endScene();
-
-		// save value
-		lastSensorYaw = eyeYaw;
 	}
-	device->drop();
-
+	device->drop();	
+	
 	//Deinitialize Oculus LibOVR
-	System::Destroy();
-
+	dev.shutDown();
+	
 	return 0;
 }
