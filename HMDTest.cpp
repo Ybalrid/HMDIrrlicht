@@ -85,7 +85,10 @@ int main(int argc, char* argv[])
 	HMD.distortionK[2] = 0.24;
 	HMD.distortionK[3] = 0.0;
 
-	HMDStereoRender renderer(device, HMD, 10);
+	HMDStereoRender *renderer = new HMDStereoRender(device, HMD, 10);
+	//create and delete for testing constructor/destructror
+	delete(renderer);
+	renderer = new HMDStereoRender(device, HMD, 10);
 
 	//Oculus Rift Head Tracking
 	CHeadTracking dev;
@@ -93,29 +96,27 @@ int main(int argc, char* argv[])
 
 	// Create world
 	smgr->addCameraSceneNodeFPS();
-	//ICameraSceneNode *camera = smgr->getActiveCamera();
-	//ISceneNode *camera = smgr->addCameraSceneNode(0);
 
 	// load the quake map
-	device->getFileSystem()->addZipFileArchive("../../lib/irrlicht/media/map-20kdm2.pk3");
+	device->getFileSystem()->addZipFileArchive("lib/irrlicht/media/map-20kdm2.pk3");
 	IAnimatedMesh* mesh = smgr->getMesh("20kdm2.bsp");
 	ISceneNode* levelNode = smgr->addOctreeSceneNode(mesh->getMesh(0), 0, -1, 128);
 	levelNode->setPosition(core::vector3df(-1350,-90,-1400));
 
 	// load a faerie 
-	IAnimatedMesh* faerie = smgr->getMesh("../../lib/irrlicht/media/faerie.md2");
+	IAnimatedMesh* faerie = smgr->getMesh("lib/irrlicht/media/faerie.md2");
 	IAnimatedMeshSceneNode* faerieNode = smgr->addAnimatedMeshSceneNode(faerie);
-	faerieNode->setMaterialTexture(0, driver->getTexture("../../lib/irrlicht/media/faerie2.bmp"));
+	faerieNode->setMaterialTexture(0, driver->getTexture("lib/irrlicht/media/faerie2.bmp"));
 	faerieNode->setMaterialFlag(EMF_LIGHTING, false);
 	faerieNode->setPosition(vector3df(40,190,-1030));
 	faerieNode->setRotation(vector3df(0,-90,0));
 	faerieNode->setMD2Animation(EMAT_SALUTE);
 
 	// load a dwarf
-	IAnimatedMesh* dwarf = smgr->getMesh("../../lib/irrlicht/media/dwarf.x");
+	IAnimatedMesh* dwarf = smgr->getMesh("lib/irrlicht/media/dwarf.x");
 	IAnimatedMeshSceneNode* dwarfNode = smgr->addAnimatedMeshSceneNode(dwarf);
 	dwarfNode->setPosition(vector3df(40,-25,20));
-	//device->getCursorControl()->setVisible(false);
+	device->getCursorControl()->setVisible(false);
 
 	// Render loop
 	while(device->run()) {
@@ -125,12 +126,13 @@ int main(int argc, char* argv[])
 
 		driver->beginScene(true,true,SColor(0,100,100,100));
 
-		//renderer.drawAll(smgr);
-		smgr->drawAll();
+		renderer->drawAll(smgr);
+		//smgr->drawAll();
 
 		// end scene
 		driver->endScene();
 	}
+	delete(renderer);
 	device->drop();	
 	
 	//Deinitialize Oculus LibOVR
